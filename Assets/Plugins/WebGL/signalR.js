@@ -1,8 +1,6 @@
-
 function Connect(serverURL) {
     startConnection(serverURL)
 }
-
 
 async function startConnection(serverURL) {
     const connection = new signalR.HubConnectionBuilder()
@@ -49,4 +47,3 @@ function arrayBufferToBase64(buffer) {
     }
     return window.btoa(binary);
 }
-

@@ -46,7 +46,7 @@ public class Movement : MonoBehaviour
     void Update()
     {
         map = NetInput.GetInputMap(id);
-        if (Input.GetKey(KeyCode.W) || map.top.GetInput())
+        if (Input.GetKey(KeyCode.W) || map.GetKey(NetKeyCode.Up))
         {
             rotationInRadians = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;
             rb.AddForce(new Vector2(Mathf.Cos(rotationInRadians) * speedMultiplier * Time.deltaTime, Mathf.Sin(rotationInRadians) * speedMultiplier * Time.deltaTime));
@@ -62,15 +62,15 @@ public class Movement : MonoBehaviour
                 boosterParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             }
         }
-        if (Input.GetKey(KeyCode.A) || map.left.GetInput())
+        if (Input.GetKey(KeyCode.A) || map.GetKeyDown(NetKeyCode.Left))
         {
             transform.Rotate(0, 0, rotationSpeed * Time.deltaTime);
         }
-        if (Input.GetKey(KeyCode.D) || map.right.GetInput())
+        if (Input.GetKey(KeyCode.D) || map.GetKeyDown(NetKeyCode.Right))
         {
             transform.Rotate(0, 0, -rotationSpeed * Time.deltaTime);
         }
-        if (Input.GetKeyDown(KeyCode.Space) || map.a.GetInput())
+        if (Input.GetKeyDown(KeyCode.Space) || map.GetKeyDown(NetKeyCode.A))
         {
             gun.Shoot();
             shootParticles.Play();

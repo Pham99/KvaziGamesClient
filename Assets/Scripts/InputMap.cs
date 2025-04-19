@@ -1,21 +1,33 @@
 using System.Collections.Generic;
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class InputMap
 {
-    public ButtonInput left = new ButtonInput();
-    public ButtonInput right = new ButtonInput();
-    public ButtonInput top = new ButtonInput();
-    public ButtonInput bottom = new ButtonInput();
-    public ButtonInput a = new ButtonInput();
-    public ButtonInput b = new ButtonInput();
-    public ButtonInput x = new ButtonInput();
-    public ButtonInput y = new ButtonInput();
+    private readonly Dictionary<NetKeyCode, ButtonInput> _buttons = new();
     public readonly Dictionary<string, Action> InputActions = new();
 
     public InputMap()
     {
+        _buttons.Add(NetKeyCode.Up, new ButtonInput());
+        _buttons.Add(NetKeyCode.Down, new ButtonInput());
+        _buttons.Add(NetKeyCode.Left, new ButtonInput());
+        _buttons.Add(NetKeyCode.Right, new ButtonInput());
+        _buttons.Add(NetKeyCode.A, new ButtonInput());
+        _buttons.Add(NetKeyCode.B, new ButtonInput());
+        _buttons.Add(NetKeyCode.X, new ButtonInput());
+        _buttons.Add(NetKeyCode.Y, new ButtonInput());
+
+        ButtonInput top = _buttons[NetKeyCode.Up];
+        ButtonInput bottom = _buttons[NetKeyCode.Down];
+        ButtonInput left = _buttons[NetKeyCode.Left];
+        ButtonInput right = _buttons[NetKeyCode.Right];
+        ButtonInput a = _buttons[NetKeyCode.A];
+        ButtonInput b = _buttons[NetKeyCode.B];
+        ButtonInput x = _buttons[NetKeyCode.X];
+        ButtonInput y = _buttons[NetKeyCode.Y];
+
         InputActions.Add("leftd", () => left.OnButtonDown());
         InputActions.Add("leftu", () => left.OnButtonUp());
         InputActions.Add("rightd", () => right.OnButtonDown());
@@ -34,30 +46,98 @@ public class InputMap
         InputActions.Add("yu", () => y.OnButtonUp());
     }
 
+    public void SetInput(string input)
+    {
+        var action = InputActions[input];
+        action.Invoke();
+    }
+
+    public bool GetKey(NetKeyCode key)
+    {
+        ButtonInput currentKey = _buttons[key];
+        return currentKey.GetInput();
+    }
+    public bool GetKeyDown(NetKeyCode key)
+    {
+        ButtonInput currentKey = _buttons[key];
+        return currentKey.GetInputDown();
+    }
+    public bool GetKeyUp(NetKeyCode key)
+    {
+        ButtonInput currentKey = _buttons[key];
+        return currentKey.GetInputUp();
+    }
+    public void UpdateInputMap()
+    {
+        foreach (var button in _buttons.Values)
+        {
+            button.ApplyToInputMap();
+        }
+    }
+
     public class ButtonInput
     {
         private bool _buttonDown = false;
-        //private bool _buttonUp = false;
+        private bool _buttonUp = false;
         private bool _buttonPressed = false;
+        private bool _buttonDownCached = false;
+        private bool _buttonUpCached = false;
+        private bool _buttonPressedCached = false;
 
+        public void ApplyToInputMap()
+        {
+            if (_buttonPressed && !_buttonDownCached)
+            {
+                _buttonDownCached = true;
+            }
+            else{
+                _buttonDownCached = false;
+            }
+
+            if (_buttonPressed && !_buttonUpCached)
+            {
+                _buttonUpCached = true;
+            }
+            else
+            {
+                _buttonUpCached = false;
+            }
+            _buttonPressedCached = _buttonPressed;
+        }
         public void OnButtonDown()
         {
-            _buttonDown = true;
+            //_buttonDown = true;
+            _buttonPressed = true;
         }
 
         public void OnButtonUp()
         {
-            _buttonDown = false;
+            //_buttonUp = false;
+            _buttonPressed = false;
         }
 
-        public bool OnButtonPressed()
+        public bool GetInputDown()
         {
-            return _buttonPressed;
+            return _buttonDownCached;
         }
-
+        public bool GetInputUp()
+        {
+            return _buttonUpCached;
+        }
         public bool GetInput()
         {
-            return _buttonDown;
+            return _buttonPressedCached;
         }
     }
+}
+public enum NetKeyCode
+{
+    Up,
+    Down,
+    Left,
+    Right,
+    A,
+    B,
+    X,
+    Y
 }

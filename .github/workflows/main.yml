@@ -11,13 +11,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the repository containing your Unity project.
+      # Check out the repository containing your Unity project.
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # To do: add caching
+      # Git LFS is used to manage large files in Git repositories.
+      - name: Create LFS file list
+        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+      - name: Restore LFS cache
+        uses: actions/cache@v3
+        id: lfs-cache
+        with:
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
+
+      - name: Git LFS Pull
+        run: |
+          git lfs pull
+          git add .
+          git reset --hard
       
-      # Step 2: Build the Unity project for WebGL using game-ci/unity-builder.
+      # Caching the Library folder to speed up the build process.
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+      
+      # Build the Unity project for WebGL using game-ci/unity-builder.
       - name: Build Unity Project (WebGL)
         uses: game-ci/unity-builder@v4
         env:
@@ -32,9 +55,13 @@ jobs:
           # Optionally specify an output directory (default is "build")
           versioning: Semantic
 
-      # Step 3: Upload the built WebGL project as a build artifact.
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4.6.2
+      # Deploy the build files to your remote server using SCP.
+      - name: Deploy WebGL Build via SCP
+        uses: appleboy/scp-action@v0.1.7
         with:
-          name: WebGLBuild
-          path: build
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.REMOTE_KEY }}
+          port: ${{ secrets.REMOTE_PORT }}
+          source: "build"
+          target: "app/WebGLBuilds" 

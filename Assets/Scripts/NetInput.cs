@@ -10,14 +10,7 @@ namespace Mygame.NetInput
         public static void HandleInput(string input, string id)
         {
             inputPerPlayer.TryGetValue(id, out InputMap map);
-            if (map.InputActions.TryGetValue(input, out var action))
-            {
-                action.Invoke();
-            }
-            else
-            {
-                Console.WriteLine($"Unknown input: {input}");
-            }
+            map.SetInput(input);
         }
         public static void AddInput(string id)
         {
@@ -26,6 +19,13 @@ namespace Mygame.NetInput
         public static InputMap GetInputMap(string id)
         {
             return inputPerPlayer[id];
+        }
+        public static void UpdateInputMaps()
+        {
+            foreach (var inputMap in inputPerPlayer.Values)
+            {
+                inputMap.UpdateInputMap();
+            }
         }
     }
 }

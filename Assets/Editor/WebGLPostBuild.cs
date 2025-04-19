@@ -13,6 +13,8 @@ public class WebGLPostBuild
 
         string sourcePath = Path.Combine(Application.dataPath, "Plugins", "WebGL", "signalr.js"); // Adjust path if needed
         string destinationPath = Path.Combine(pathToBuiltProject, "Build", "signalr.js");
+        Debug.Log(sourcePath);
+        Debug.Log(destinationPath);
 
         if (File.Exists(sourcePath))
         {

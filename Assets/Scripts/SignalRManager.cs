@@ -8,11 +8,14 @@ public class SignalRManager : MonoBehaviour
     [SerializeField]
     private GameObject text;
     private TMPro.TextMeshProUGUI textMeshPro;
+    [SerializeField]
     private PlayerSpawner spawner;
     private SignalRClient signalRClient = new();
+    [SerializeField]
+    private SignalRPublicAPI signalRPublicAPI;
     private QRCodeDisplayer qrCodeDisplayer;
     [SerializeField]
-    private string serverURL = "http://localhost:5000/gamehub?type=game";
+    private string serverURL = "kvazi.online";
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     [DllImport("__Internal")]
     private static extern void StartConnection(string serverURL);
@@ -32,6 +35,7 @@ public class SignalRManager : MonoBehaviour
     {
         Debug.Log("new player spotted");
         NetInput.AddInput(id);
+        signalRPublicAPI.onPlayerConnected.Invoke(id, name);
         spawner.TellHimToDoIt(id, name);
     }
     public void OnReceiveQRCode(byte[] qr)
