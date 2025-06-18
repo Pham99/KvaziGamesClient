@@ -132,7 +132,9 @@
 		connection.on("AddPlayerToGame", function (id, name) {
 			SendToUnity("AddPlayer", id, name);
 		});
-
+    connection.on("RemovePlayer", function (id) {
+      SendToUnity("RemovePlayer", id);
+    });
 		connection.on("SendQRCode", function (arraybuffer) {
 			console.log(arraybuffer);
 			SendToUnity("DisplayQRCodeFromBase64", arraybuffer);

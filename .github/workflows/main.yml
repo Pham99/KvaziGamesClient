@@ -56,12 +56,24 @@ jobs:
           versioning: Semantic
 
       # Deploy the build files to your remote server using SCP.
-      - name: Deploy WebGL Build via SCP
-        uses: appleboy/scp-action@v0.1.7
+      #- name: Deploy WebGL Build via SCP
+        #uses: appleboy/scp-action@v0.1.7
+        #with:
+         # host: ${{ secrets.REMOTE_HOST }}
+          #username: ${{ secrets.REMOTE_USER }}
+          #key: ${{ secrets.REMOTE_KEY }}
+          #port: ${{ secrets.REMOTE_PORT }}
+          #source: "build"
+          #target: "app/WebGLBuilds" 
+
+      # Deploy the build files to your remote server using rsync.
+      - name: Deploy WebGL Build via rsync
+        uses: burnett01/rsync-deployments@7.0.2
         with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USER }}
-          key: ${{ secrets.REMOTE_KEY }}
-          port: ${{ secrets.REMOTE_PORT }}
-          source: "build"
-          target: "app/WebGLBuilds" 
+          switches: -avzr --delete
+          path: build/
+          remote_path: app/WebGLBuilds/
+          remote_host: ${{ secrets.REMOTE_HOST }}
+          remote_user: ${{ secrets.REMOTE_USER }}
+          remote_key: ${{ secrets.REMOTE_KEY }}
+          remote_port: ${{ secrets.REMOTE_PORT }}

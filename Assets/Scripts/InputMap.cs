@@ -77,8 +77,6 @@ public class InputMap
 
     public class ButtonInput
     {
-        private bool _buttonDown = false;
-        private bool _buttonUp = false;
         private bool _buttonPressed = false;
         private bool _buttonDownCached = false;
         private bool _buttonUpCached = false;
@@ -86,33 +84,17 @@ public class InputMap
 
         public void ApplyToInputMap()
         {
-            if (_buttonPressed && !_buttonDownCached)
-            {
-                _buttonDownCached = true;
-            }
-            else{
-                _buttonDownCached = false;
-            }
-
-            if (_buttonPressed && !_buttonUpCached)
-            {
-                _buttonUpCached = true;
-            }
-            else
-            {
-                _buttonUpCached = false;
-            }
+            _buttonDownCached = !_buttonPressedCached && _buttonPressed;
+            _buttonUpCached = _buttonPressedCached && !_buttonPressed;
             _buttonPressedCached = _buttonPressed;
         }
         public void OnButtonDown()
         {
-            //_buttonDown = true;
             _buttonPressed = true;
         }
 
         public void OnButtonUp()
         {
-            //_buttonUp = false;
             _buttonPressed = false;
         }
 

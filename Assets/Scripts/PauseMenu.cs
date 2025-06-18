@@ -5,6 +5,8 @@ public class PauseMenu : MonoBehaviour
 {
     [SerializeField]
     private GameObject pauseMenu;
+    [SerializeField]
+    private GameObject gameOverMenu;
     private bool gameIsPaused = false;
     public void QuitToMenu()
     {
@@ -18,6 +20,11 @@ public class PauseMenu : MonoBehaviour
     public void Pause()
     {
         pauseMenu.SetActive(true);
+        Time.timeScale = 0;
+    }
+    public void GameOver()
+    {
+        gameOverMenu.SetActive(true);
         Time.timeScale = 0;
     }
     void Update()

@@ -34,7 +34,10 @@ public class SignalRClient
         {
             _manager.AddPlayer(id, name);
         });
-
+        hubConnection.On<string>("RemovePlayer", (id) =>
+        {
+            _manager.OnPlayerRemove(id);
+        });
         hubConnection.On<byte[]>("SendQRCode", (qrCodeBytes) =>
         {
             Debug.Log("it was sent");

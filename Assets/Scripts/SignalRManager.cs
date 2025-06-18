@@ -8,23 +8,27 @@ public class SignalRManager : MonoBehaviour
     [SerializeField]
     private GameObject text;
     private TMPro.TextMeshProUGUI textMeshPro;
-    [SerializeField]
-    private PlayerSpawner spawner;
     private SignalRClient signalRClient = new();
     [SerializeField]
     private SignalRPublicAPI signalRPublicAPI;
+    [SerializeField]
+    private PlayerManager playerManager;
     private QRCodeDisplayer qrCodeDisplayer;
     [SerializeField]
-    private string serverURL = "kvazi.online";
+    private string serverURL = "https://kvazi.online/gamehub?type=game";
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     [DllImport("__Internal")]
     private static extern void StartConnection(string serverURL);
     void Start()
     {
         textMeshPro = text.GetComponent<TextMeshProUGUI>();
-        spawner = GameObject.Find("PlayerSpawner").GetComponent<PlayerSpawner>();
         qrCodeDisplayer = transform.GetComponent<QRCodeDisplayer>();
         signalRClient._manager = this;
+    }
+
+    void Update()
+    {
+        NetInput.UpdateInputMaps();
     }
     public void OnReceiveDirection(string direction, string id)
     {
@@ -35,8 +39,14 @@ public class SignalRManager : MonoBehaviour
     {
         Debug.Log("new player spotted");
         NetInput.AddInput(id);
-        signalRPublicAPI.onPlayerConnected.Invoke(id, name);
-        spawner.TellHimToDoIt(id, name);
+        //signalRPublicAPI.onPlayerConnected.Invoke(id, name);
+        playerManager.OnPlayerConnectDelayed(id, name);
+        //spawner.TellHimToDoIt(id, name);
+    }
+    public void OnPlayerRemove(string id)
+    {
+        Debug.Log("player disconnected" + id);
+        playerManager.OnPlayerDisconnectDelayed(id);
     }
     public void OnReceiveQRCode(byte[] qr)
     {
@@ -60,7 +70,7 @@ public class SignalRManager : MonoBehaviour
 
     public void ChangeServerURL(string serverURL)
     {
-        this.serverURL = "http://" + serverURL + "/gamehub?type=game";
+        this.serverURL = "https://" + serverURL + "/gamehub?type=game";
     }
     public void StartConnection()
     {

@@ -40,12 +40,12 @@ public class Movement : MonoBehaviour
         shootParticles = transform.Find("ShootParticle").GetComponent<ParticleSystem>();
         id = transform.GetComponent<PlayerInfo>().id;
         gun = transform.Find("Gun").GetComponent<Gun>();
+        map = NetInput.GetInputMap(id);
     }
 
     // Update is called once per frame
     void Update()
     {
-        map = NetInput.GetInputMap(id);
         if (Input.GetKey(KeyCode.W) || map.GetKey(NetKeyCode.Up))
         {
             rotationInRadians = (transform.rotation.eulerAngles.z + 90) * Mathf.Deg2Rad;

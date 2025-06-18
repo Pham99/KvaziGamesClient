@@ -25,6 +25,10 @@ public class SignalRJSAdapter : MonoBehaviour
         JSONNode jsonNode = JSON.Parse(jsonString);
         manager.AddPlayer(jsonNode[0], jsonNode[1]);
     }
+    public void RemovePlayer(string id)
+    {
+        manager.OnPlayerRemove(id);
+    }
     public void NotifyConnectionSuccess()
     {
         manager.NotifyConnectionSuccess();
