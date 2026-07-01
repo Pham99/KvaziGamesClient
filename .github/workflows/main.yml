@@ -14,6 +14,8 @@ jobs:
       # Check out the repository containing your Unity project.
       - name: Checkout Repository
         uses: actions/checkout@v3
+          with:
+            lfs: true
 
       # Git LFS is used to manage large files in Git repositories.
       - name: Create LFS file list
@@ -68,7 +70,7 @@ jobs:
 
       # Deploy the build files to your remote server using rsync.
       - name: Deploy WebGL Build via rsync
-        uses: burnett01/rsync-deployments@7.0.2
+        uses: burnett01/rsync-deployments@v9
         with:
           switches: -avzr --delete
           path: build/
