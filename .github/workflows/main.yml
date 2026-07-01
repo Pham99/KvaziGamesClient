@@ -14,8 +14,8 @@ jobs:
       # Check out the repository containing your Unity project.
       - name: Checkout Repository
         uses: actions/checkout@v3
-          with:
-            lfs: true
+        with:
+          lfs: true
 
       # Git LFS is used to manage large files in Git repositories.
       - name: Create LFS file list
