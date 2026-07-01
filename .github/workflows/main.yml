@@ -60,6 +60,7 @@ jobs:
           # executeMethod: BuildScript.PerformWebGLBuild
           # Optionally specify an output directory (default is "build")
           versioning: Semantic
+          allowDirtyBuild: true
 
       # Deploy the build files to your remote server using SCP.
       #- name: Deploy WebGL Build via SCP
