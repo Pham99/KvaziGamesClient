@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -25,7 +26,12 @@ public class PauseMenu : MonoBehaviour
     public void GameOver()
     {
         gameOverMenu.SetActive(true);
-        Time.timeScale = 0;
+        StartCoroutine(RestartGameAfterDelay(5f));
+    }
+    IEnumerator RestartGameAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
     void Update()
     {

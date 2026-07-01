@@ -9,8 +9,14 @@ namespace Mygame.NetInput
         private static Dictionary<string, InputMap> inputPerPlayer = new Dictionary<string, InputMap> { {"1", new InputMap() } };
         public static void HandleInput(string input, string id)
         {
-            inputPerPlayer.TryGetValue(id, out InputMap map);
-            map.SetInput(input);
+            if(inputPerPlayer.TryGetValue(id, out InputMap map))
+            {
+                map.SetInput(input);
+            }
+            else
+            {
+                Console.WriteLine($"No input map found for player ID: {id}");
+            }
         }
         public static void AddInput(string id)
         {
@@ -18,7 +24,15 @@ namespace Mygame.NetInput
         }
         public static InputMap GetInputMap(string id)
         {
-            return inputPerPlayer[id];
+            if(inputPerPlayer.TryGetValue(id, out InputMap map))
+            {
+                return map;
+            }
+            else
+            {
+                Console.WriteLine($"No input map found for player ID: {id}");
+                return null;
+            }
         }
         public static void UpdateInputMaps()
         {

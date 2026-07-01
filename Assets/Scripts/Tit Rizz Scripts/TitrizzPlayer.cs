@@ -1,5 +1,6 @@
 using Mygame.NetInput;
 using UnityEngine;
+using UnityEngine.Analytics;
 
 public class TitrizzPlayer : MonoBehaviour
 {
@@ -22,8 +23,8 @@ public class TitrizzPlayer : MonoBehaviour
         Name = name;
         PlayerNumber = playerNumber;
         this.boardController = boardController;
-        netInput = NetInput.GetInputMap(Id);
         CurrentPiece = boardController.SpawnNewPieceForPlayer(PlayerNumber);
+        netInput = NetInput.GetInputMap(Id);
     }
 
     void Start()
@@ -35,44 +36,87 @@ public class TitrizzPlayer : MonoBehaviour
     {
         if (netInput == null || CurrentPiece == null)
         {
-            return;
+            
         }
-        // Input handling
-        if (netInput.GetKeyDown(NetKeyCode.Left))
+        else
         {
-            boardController.MovePiece(CurrentPiece, new Vector2Int(-1, 0));
-        }
-        if (netInput.GetKeyDown(NetKeyCode.Right))
-        {
-            boardController.MovePiece(CurrentPiece, new Vector2Int(1, 0));
-        }
-        if (netInput.GetKeyDown(NetKeyCode.Down))
-        {
-            boardController.MovePiece(CurrentPiece, new Vector2Int(0, -1));
-        }
-        if (netInput.GetKeyDown(NetKeyCode.A))
-        {
-            boardController.DropPiece(CurrentPiece);
-            // Only set in place if grounded (touching floor or set piece)
-            if (boardController.IsPieceGrounded(CurrentPiece))
+            // Input handling
+            if (netInput.GetKeyDown(NetKeyCode.Left))
             {
-                boardController.SetPieceInPlace(CurrentPiece); // Instantly set in place
+                boardController.MovePiece(CurrentPiece, new Vector2Int(-1, 0));
             }
-            isLocking = false;
-            lockTimer = 0f;
-            return;
+            if (netInput.GetKeyDown(NetKeyCode.Right))
+            {
+                boardController.MovePiece(CurrentPiece, new Vector2Int(1, 0));
+            }
+            if (netInput.GetKeyDown(NetKeyCode.Down))
+            {
+                boardController.MovePiece(CurrentPiece, new Vector2Int(0, -1));
+            }
+            if (netInput.GetKeyDown(NetKeyCode.A))
+            {
+                boardController.DropPiece(CurrentPiece);
+                // Only set in place if grounded (touching floor or set piece)
+                if (boardController.IsPieceGrounded(CurrentPiece))
+                {
+                    boardController.SetPieceInPlace(CurrentPiece); // Instantly set in place
+                }
+                isLocking = false;
+                lockTimer = 0f;
+                return;
+            }
+            if (netInput.GetKeyDown(NetKeyCode.X))
+            {
+                boardController.RotatePieceClockwise(CurrentPiece);
+            }
+            if (netInput.GetKeyDown(NetKeyCode.Up))
+            {
+                boardController.RotatePieceClockwise(CurrentPiece);
+            }
+            if (netInput.GetKeyDown(NetKeyCode.Y))
+            {
+                boardController.RotatePieceCounterClockwise(CurrentPiece);
+            }
         }
-        if (netInput.GetKeyDown(NetKeyCode.X))
+
+        // Unity Input handling
+        if (boardController != null && CurrentPiece != null)
         {
-            boardController.RotatePieceClockwise(CurrentPiece);
-        }
-        if (netInput.GetKeyDown(NetKeyCode.Up))
-        {
-            boardController.RotatePieceClockwise(CurrentPiece);
-        }
-        if (netInput.GetKeyDown(NetKeyCode.Y))
-        {
-            boardController.RotatePieceCounterClockwise(CurrentPiece);
+            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                boardController.MovePiece(CurrentPiece, new Vector2Int(-1, 0));
+            }
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+            {
+                boardController.MovePiece(CurrentPiece, new Vector2Int(1, 0));
+            }
+            if (Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                boardController.MovePiece(CurrentPiece, new Vector2Int(0, -1));
+            }
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                boardController.DropPiece(CurrentPiece);
+                if (boardController.IsPieceGrounded(CurrentPiece))
+                {
+                    boardController.SetPieceInPlace(CurrentPiece);
+                }
+                isLocking = false;
+                lockTimer = 0f;
+                return;
+            }
+            if (Input.GetKeyDown(KeyCode.X))
+            {
+                boardController.RotatePieceClockwise(CurrentPiece);
+            }
+            if (Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                boardController.RotatePieceClockwise(CurrentPiece);
+            }
+            if (Input.GetKeyDown(KeyCode.Y))
+            {
+                boardController.RotatePieceCounterClockwise(CurrentPiece);
+            }
         }
 
         // Lock delay and grounded check
@@ -103,6 +147,7 @@ public class TitrizzPlayer : MonoBehaviour
 
     private bool IsPieceGrounded()
     {
+        if (boardController == null || CurrentPiece == null) return false;
         return boardController.IsPieceGrounded(CurrentPiece);
     }
 

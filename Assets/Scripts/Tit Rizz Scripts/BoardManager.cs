@@ -1,23 +1,49 @@
+using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class BoardManager : MonoBehaviour
 {
-    public Tile blockTile;
-    public Tilemap tilemap;
-    public int width = 16;
-    public int height = 20;
-    public int[,] board = new int[16, 20]; // 0 = empty, 1-9 = player pieces, 10+ = set pieces
-    public PauseMenu gameManager; // Reference to the PauseMenu for game over handling
-    public ParticlePool dustParticlePool;
-    public ParticlePool clearParticlePool;
-    public bool gameOver = false;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
+    [SerializeField]
+    private int width;
+    [SerializeField]
+    private int height;
+    private int[,] board = new int[30, 20]; // 0 = empty, 1-9 = player pieces, 10+ = set pieces
+    [SerializeField]
+    private Tile blockTile;
+    [SerializeField]
+    private Tilemap tilemap;
+    [SerializeField]
+    private SpriteRenderer background;
+    [SerializeField]
+    private PauseMenu gameManager; // Reference to the PauseMenu for game over handling
+    [SerializeField]
+    private ParticlePool dustParticlePool;
+    [SerializeField]
+    private ParticlePool clearParticlePool;
+    private bool gameOver = false;
 
+    [Header("Debug")]
+    [SerializeField]
+    private int debugTargetWidth = 20;
+
+    [ContextMenu("Debug Resize Board")]
+    private void DebugResizeBoard()
+    {
+        if (Application.isPlaying)
+        {
+            ResizeBoard(debugTargetWidth);
+        }
+        else
+        {
+            Debug.LogWarning("ResizeBoard can only be debugged while in Play Mode.");
+        }
+    }
+
+    void Awake()
+    {
+        background.size = new Vector2(width, height);
     }
     void Update()
     {
@@ -38,7 +64,8 @@ public class BoardManager : MonoBehaviour
         int spawnY = height - 2;
         System.Random rand = new System.Random();
         int maxAttempts = width * 2; // Try all possible x and y positions
-        for (int y = spawnY; y >= 0; y--)
+        int minY = Mathf.Max(0, height - 4);
+        for (int y = spawnY; y >= minY; y--)
         {
             // Try random x first, then sweep left and right
             int startX = rand.Next(0, width - pieceWidth + 1);
@@ -63,7 +90,7 @@ public class BoardManager : MonoBehaviour
     {
         foreach (Vector2Int pos in piece.GetOccupiedPositions())
         {
-            Debug.Log("piece:" + piece + " pos:" + pos + " id:" + piece.id);
+            //Debug.Log("piece:" + piece + " pos:" + pos + " id:" + piece.id);
             board[pos.x, pos.y] = piece.id;
         }
         DrawBoard();
@@ -96,20 +123,6 @@ public class BoardManager : MonoBehaviour
         }
         return true;
     }
-    private bool TryRotatePiece(Piece piece)
-    {
-        foreach (Vector2Int pos in piece.GetOccupiedPositions())
-        {
-            int newX = pos.x;
-            int newY = pos.y;
-            if (newX < 0 || newX >= width || newY < 0 || newY >= height)
-            {
-                Debug.Log("Cannot rotate to " + newX + ", " + newY);
-                return false;
-            }
-        }
-        return true;
-    }
     private bool MovePiece(Piece piece, Vector2Int direction)
     {
         if (TryMovePiece(piece, direction))
@@ -120,41 +133,6 @@ public class BoardManager : MonoBehaviour
             return true;
         }
         return false;
-    }
-    private void RotatePieceClockwise(Piece piece)
-    {
-        RemovePiece(piece);
-        int oldRotation = piece.rotationState;
-        int newRotation = (oldRotation + 1) % 4;
-        int srsIndex = SRSData.GetSRSIndex(oldRotation, newRotation);
-        int[,] originalShape = piece.shape;
-        Vector2Int originalPosition = piece.position;
-        piece.RotateClockWise();
-        Vector2Int[,] offsets;
-        if (piece.type == TetronimoType.I)
-            offsets = SRSData.I_Offsets;
-        else if (piece.type == TetronimoType.O)
-            offsets = SRSData.O_Offsets;
-        else
-            offsets = SRSData.JLSTZ_Offsets;
-        bool rotated = false;
-        for (int i = 0; i < offsets.GetLength(1); i++)
-        {
-            Vector2Int offset = offsets[srsIndex, i];
-            // No y-inversion needed now
-            piece.position = originalPosition + offset;
-            if (IsValidPosition(piece))
-            {
-                rotated = true;
-                break;
-            }
-        }
-        if (!rotated)
-        {
-            piece.RotateCounterClockWise();
-            piece.position = originalPosition;
-        }
-        InsertPiece(piece);
     }
     private void RotatePiece(Piece piece)
     {
@@ -296,7 +274,7 @@ public class BoardManager : MonoBehaviour
         {
             Vector3 worldPos = tilemap.CellToWorld(new Vector3Int(pos.x, pos.y, 0));
             worldPos.x += 0.5f;
-            var particle = dustParticlePool.GetParticle(worldPos, Quaternion.Euler(-90, 0, 0));
+            var particle = dustParticlePool.GetParticle(worldPos, Quaternion.identity);
             var main = particle.GetComponent<ParticleSystem>().main;
             main.startColor = color;
             dustParticlePool.ReturnParticle(particle, main.duration + main.startLifetime.constantMax);
@@ -368,7 +346,7 @@ public class BoardManager : MonoBehaviour
             board[x, y] = 0;
         }
     }
-        public void ClearLineWithParticles(int y)
+    public void ClearLineWithParticles(int y)
     {
         List<Vector2Int> clearedPositions = new List<Vector2Int>();
         for (int x = 0; x < width; x++)
@@ -384,7 +362,9 @@ public class BoardManager : MonoBehaviour
         foreach (var pos in positions)
         {
             Vector3 worldPos = tilemap.CellToWorld(new Vector3Int(pos.x, pos.y, 0));
-            var particle = clearParticlePool.GetParticle(worldPos, Quaternion.Euler(-90, 0, 0));
+            worldPos.x += 0.5f;
+            worldPos.y += 0.5f;
+            var particle = clearParticlePool.GetParticle(worldPos, Quaternion.identity);
             var main = particle.GetComponent<ParticleSystem>().main;
             clearParticlePool.ReturnParticle(particle, main.duration + main.startLifetime.constantMax);
         }
@@ -418,6 +398,115 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    public void ResizeBoard(int newWidth)
+    {
+        int oldWidth = width;
+        int targetWidth = Mathf.Clamp(newWidth, 12, board.GetLength(0));
+
+        if (targetWidth < oldWidth)
+        {
+            for (int x = targetWidth; x < oldWidth; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    board[x, y] = 0;
+                    RemoveTile(x, y);
+                }
+            }
+
+            width = targetWidth;
+
+            var players = UnityEngine.Object.FindObjectsByType<TitrizzPlayer>(FindObjectsSortMode.None);
+            foreach (var player in players)
+            {
+                Piece p = player.CurrentPiece;
+                if (p != null)
+                {
+                    int maxX = -1;
+                    foreach (Vector2Int pos in p.GetOccupiedPositions())
+                    {
+                        if (pos.x > maxX) maxX = pos.x;
+                    }
+
+                    if (maxX >= targetWidth)
+                    {
+                        int stepsLeft = maxX - targetWidth + 1;
+                        
+                        RemovePiece(p);
+                        p.position += new Vector2Int(-stepsLeft, 0);
+
+                        bool foundSpot = false;
+                        while (!foundSpot)
+                        {
+                            Vector2Int rowStartPos = p.position;
+
+                            while (true)
+                            {
+                                if (IsValidPosition(p))
+                                {
+                                    foundSpot = true;
+                                    break;
+                                }
+
+                                // Move left to test next column
+                                p.position += new Vector2Int(-1, 0);
+
+                                bool outOfLeft = false;
+                                foreach (Vector2Int pos in p.GetOccupiedPositions())
+                                {
+                                    if (pos.x < 0)
+                                    {
+                                        outOfLeft = true;
+                                        break;
+                                    }
+                                }
+
+                                if (outOfLeft)
+                                {
+                                    break; // Stop scanning left, need to move up
+                                }
+                            }
+
+                            if (foundSpot) break;
+
+                            // Reset X back to the right boundary and move up one row
+                            p.position = new Vector2Int(rowStartPos.x, rowStartPos.y + 1);
+
+                            bool outOfTop = false;
+                            foreach (Vector2Int pos in p.GetOccupiedPositions())
+                            {
+                                if (pos.y >= height)
+                                {
+                                    outOfTop = true;
+                                    break;
+                                }
+                            }
+
+                            if (outOfTop)
+                                break; // Game over condition met
+                        }
+
+                        if (foundSpot)
+                        {
+                            InsertPiece(p);
+                        }
+                        else
+                        {
+                            gameOver = true;
+                            Debug.Log("Game Over: Player crushed by shrinking board.");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            width = targetWidth;
+        }
+
+        background.size = new Vector2(width, height);
+    }
     // Add public wrappers for BoardController
     public bool MovePiecePublic(Piece piece, Vector2Int direction)
     {

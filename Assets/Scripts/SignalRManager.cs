@@ -15,15 +15,17 @@ public class SignalRManager : MonoBehaviour
     private PlayerManager playerManager;
     private QRCodeDisplayer qrCodeDisplayer;
     [SerializeField]
-    private string serverURL = "https://kvazi.online/gamehub?type=game";
+    private string serverURL = "http://192.168.0.93/gamehub";
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     [DllImport("__Internal")]
     private static extern void StartConnection(string serverURL);
     void Start()
     {
+        signalRPublicAPI = FindFirstObjectByType<SignalRPublicAPI>();
         textMeshPro = text.GetComponent<TextMeshProUGUI>();
         qrCodeDisplayer = transform.GetComponent<QRCodeDisplayer>();
         signalRClient._manager = this;
+        var initDispatcher = MainThreadDispatcher.Instance;
     }
 
     void Update()
@@ -38,9 +40,35 @@ public class SignalRManager : MonoBehaviour
     public void AddPlayer(string id, string name)
     {
         Debug.Log("new player spotted");
+        try
+        {
+            Debug.Log("1. SignalR Callback Hit");
+
+            // Force the execution into a lambda
+            MainThreadDispatcher.Instance.Enqueue(() => 
+            {
+                Debug.Log("3. Dispatcher is executing the lambda on the Main Thread");
+                
+                if (signalRPublicAPI != null)
+                {
+                    signalRPublicAPI.onPlayerConnected.Invoke(id, name);
+                    Debug.Log("4. UnityEvent successfully invoked");
+                }
+                else
+                {
+                    Debug.LogError("UnityEvent is null! Initialize it first.");
+                }
+            });
+
+            Debug.Log("2. Action successfully Enqueued");
+        }
+        catch (System.Exception ex)
+        {
+            // This will catch the silent background thread crash and force it to the console
+            Debug.LogError($"Background Thread Exception: {ex.Message}\n{ex.StackTrace}");
+        }
         NetInput.AddInput(id);
-        //signalRPublicAPI.onPlayerConnected.Invoke(id, name);
-        playerManager.OnPlayerConnectDelayed(id, name);
+        //playerManager.OnPlayerConnectDelayed(id, name);
         //spawner.TellHimToDoIt(id, name);
     }
     public void OnPlayerRemove(string id)
@@ -50,18 +78,12 @@ public class SignalRManager : MonoBehaviour
     }
     public void OnReceiveQRCode(byte[] qr)
     {
-        Debug.Log("it stalled");
-        qrCodeDisplayer.DoDisplayQRCode(qr);
-        //MainThreadDispatcher.Instance.Enqueue(() => qrCodeDisplayer.DisplayQRCode(qr));
-        Debug.Log("this worked");
+        MainThreadDispatcher.Instance.Enqueue(() => qrCodeDisplayer.DisplayQRCode(qr));
     }
     public void OnReceiveQRCode(string base64String)
     {
-        Debug.Log("starded base64 QR");
         Debug.Log("from manager: " + base64String);
-        qrCodeDisplayer.DoDisplayQRCode(base64String);
-        //MainThreadDispatcher.Instance.Enqueue(() => qrCodeDisplayer.DisplayQRCode(qr));
-        Debug.Log("this worked");
+        MainThreadDispatcher.Instance.Enqueue(() => qrCodeDisplayer.DisplayQRCodeFromBase64(base64String));
     }
     public void NotifyConnectionSuccess()
     {
@@ -70,7 +92,7 @@ public class SignalRManager : MonoBehaviour
 
     public void ChangeServerURL(string serverURL)
     {
-        this.serverURL = "https://" + serverURL + "/gamehub?type=game";
+        this.serverURL = "http://" + serverURL + "/gamehub";
     }
     public void StartConnection()
     {

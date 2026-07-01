@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using TMPro;
 using UnityEngine;
 
@@ -91,6 +90,12 @@ public class PlayerManager : MonoBehaviour
     {
         pendingDisconnectId = id;
         OnPlayerDisconnectCalled = true;
+    }
+    void Start()
+    {
+        #if UNITY_EDITOR
+            OnPlayerConnect("player1", "Player 1");
+        #endif
     }
     void Update()
     {

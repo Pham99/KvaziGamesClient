@@ -36,9 +36,13 @@ public class MainMenu : MonoBehaviour
         resolutionDropdown.RefreshShownValue();
 
     }
-    public void NewGame()
+    public void LoadTitRizz()
     {
-        SceneManager.LoadSceneAsync("level1");
+        SceneManager.LoadSceneAsync("Tit Rizz");
+    }
+    public void LoadAssSteroids()
+    {
+        SceneManager.LoadSceneAsync("Ass Steroids");
     }
     public void Quit()
     {

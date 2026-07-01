@@ -5,32 +5,14 @@ using System;
 public class QRCodeDisplayer : MonoBehaviour
 {
     // Assign a UI RawImage (from your Canvas) in the Inspector.
-    public RawImage qrDisplay;
-    byte[] data;
-    string data64;
-    bool DoIt = false;
-    bool DoItBase64 = false;
+    [SerializeField]
+    private RawImage qrDisplay;
 
-    private void Update()
-    {
-        if (DoIt)
-        {
-            DisplayQRCode(data);
-            DoIt = false;
-        }
-        if (DoItBase64)
-        {
-            DisplayQRCodeFromBase64(data64);
-            DoItBase64 = false;
-        }
-    }
     /// <summary>
     /// Displays the QR code from a PNG byte array.
     /// </summary>
     public void DisplayQRCode(byte[] qrCodeBytes)
     {
-        Debug.Log("1");
-
         // Check if the byte array is valid
         if (qrCodeBytes == null || qrCodeBytes.Length == 0)
         {
@@ -38,7 +20,6 @@ public class QRCodeDisplayer : MonoBehaviour
             return;
         }
 
-        Debug.Log("qrCodeBytes length: " + qrCodeBytes.Length);
 
         Texture2D texture = new Texture2D(2, 2);
 
@@ -50,7 +31,6 @@ public class QRCodeDisplayer : MonoBehaviour
             if (success)
             {
                 qrDisplay.texture = texture;
-                Debug.Log("2");
             }
             else
             {
@@ -61,16 +41,6 @@ public class QRCodeDisplayer : MonoBehaviour
         {
             Debug.LogError("Exception during LoadImage: " + ex);
         }
-    }
-    public void DoDisplayQRCode(byte[] data)
-    {
-        this.data = data;
-        DoIt = true;
-    }
-    public void DoDisplayQRCode(string data)
-    {
-        this.data64 = data;
-        DoItBase64 = true;
     }
 
     /// <summary>

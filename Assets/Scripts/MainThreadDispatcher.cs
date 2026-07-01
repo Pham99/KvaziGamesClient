@@ -1,10 +1,11 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using UnityEngine;
 
 public class MainThreadDispatcher : MonoBehaviour
 {
-    private static readonly Queue<Action> _executionQueue = new Queue<Action>();
+    // 1. Replaced Queue with ConcurrentQueue. It is inherently thread-safe and lock-free.
+    private static readonly ConcurrentQueue<Action> _executionQueue = new();
     private static MainThreadDispatcher _instance;
 
     public static MainThreadDispatcher Instance
@@ -13,7 +14,6 @@ public class MainThreadDispatcher : MonoBehaviour
         {
             if (_instance == null)
             {
-                // Create a new GameObject if one doesn't exist.
                 GameObject obj = new GameObject("MainThreadDispatcher");
                 _instance = obj.AddComponent<MainThreadDispatcher>();
                 DontDestroyOnLoad(obj);
@@ -22,36 +22,33 @@ public class MainThreadDispatcher : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Enqueue an action to be executed on the main thread.
-    /// </summary>
     public void Enqueue(Action action)
     {
-        if (action == null)
-            throw new ArgumentNullException(nameof(action));
-
-        lock (_executionQueue)
-        {
-            _executionQueue.Enqueue(action);
-        }
+        if (action == null) return;
+        
+        // No lock needed.
+        _executionQueue.Enqueue(action);
     }
 
     void Update()
     {
-        lock (_executionQueue)
-        {
-            if (_executionQueue.Count > 0)
-                Debug.Log("Dispatcher executing " + _executionQueue.Count + " action(s).");
-        }
+        // 2. Frame-Drop Safeguard.
+        // Limit the number of actions processed per frame to guarantee the game doesn't freeze.
+        int actionsProcessed = 0;
+        int maxActionsPerFrame = 50; 
 
-        while (_executionQueue.Count > 0)
+        // 3. TryDequeue handles the safety internally without heavy locking overhead.
+        while (_executionQueue.TryDequeue(out Action action))
         {
-            Action action;
-            lock (_executionQueue)
-            {
-                action = _executionQueue.Dequeue();
-            }
+            Debug.Log("Executing action on main thread.");
             action?.Invoke();
+            
+            actionsProcessed++;
+            if (actionsProcessed >= maxActionsPerFrame)
+            {
+                Debug.LogWarning("Dispatcher hit max actions per frame. Postponing remainder.");
+                break; 
+            }
         }
     }
 }
